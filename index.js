@@ -58,24 +58,19 @@ module.exports = function(app) {
             pgn
           }) => pgn === msg.pgn)
 
-          if (details && (details.manufacturer == '' || details.manufacturer == fields['Manufacturer Code'])) {
+          if (details && (details.manufacturer == '' || details.manufacturer == null || details.manufacturer == fields['Manufacturer Code'])) {
 
             let instance = getInstance(fields, msg.src)
+            let basePath = replace(details.basePath, fields, instance, msg.src)
 
-            if (!isNaN(parseInt(instance))) {
-              let basePath = replace(details.basePath, fields, instance, msg.src)
-
-              let keys = []
-              if (details.fields && details.fields.length > 0) {
-                keys = details.fields.split(",").map(field => field.trim())
-              } else {
-                keys = Object.keys(fields)
-              }
-
-              handleDelta(fields, keys, basePath, msg.src, instance)
+            let keys = []
+            if (details.fields && details.fields.length > 0) {
+              keys = details.fields.split(",").map(field => field.trim())
             } else {
-              app.error('Instance not found for pgn ' + msg.pgn + ' source ' + msg.src)
+              keys = Object.keys(fields)
             }
+
+            handleDelta(fields, keys, basePath, msg.src, instance)
           }
         }
       } catch (e) {
@@ -149,7 +144,12 @@ module.exports = function(app) {
       if (fields.hasOwnProperty(name)) {
         value = toCamelCase(fields[name])
       } else if (name.includes('Instance')) {
-        value = instance
+        if (!isNaN(parseInt(instance))) {
+          value = instance
+        } else {
+          value = ''
+          app.error('Instance not found for pgn ' + msg.pgn + ' source ' + msg.src)
+        }
       } else if (name.includes('Source')) {
         value = src.toString()
       } else if (name.includes('canName')) {
