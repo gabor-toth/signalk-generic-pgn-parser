@@ -4,8 +4,8 @@ const PLUGIN_ID = 'signalk-generic-pgn-parser'
 const PLUGIN_NAME = 'Generic PGN Parser'
 
 module.exports = function(app) {
-  var plugin = {};
-  var n2kCallback
+  let plugin = {};
+  let n2kCallback
 
   plugin.id = PLUGIN_ID;
   plugin.name = PLUGIN_NAME;
@@ -58,12 +58,12 @@ module.exports = function(app) {
             pgn
           }) => pgn === msg.pgn)
 
-          if (details && (details.manufacturer == '' || details.manufacturer == null || details.manufacturer == fields['Manufacturer Code'])) {
+          if (details && (details.manufacturer === '' || details.manufacturer == null || details.manufacturer === fields['Manufacturer Code'])) {
 
             let instance = getInstance(fields, msg.src)
             let basePath = replace(details.basePath, fields, instance, msg.src)
 
-            let keys = []
+            let keys
             if (details.fields && details.fields.length > 0) {
               keys = details.fields.split(",").map(field => field.trim())
             } else {
@@ -82,13 +82,13 @@ module.exports = function(app) {
 
   plugin.stop = function() {
     if (n2kCallback) {
-      app.removeListener("N2KAnalyzerOut", n2kCallback)
+      app.removeEventListener("N2KAnalyzerOut", n2kCallback)
       n2kCallback = undefined
     }
   }
   return plugin;
 
-  function handleDelta(fields, keys, basePath, src, instance) {
+  function handleDelta(fields, keys, basePath, _src, _instance) {
     /*
     let values = (keys.map(key => ({
       "path": basePath + '.' + toCamelCase(key),
@@ -159,14 +159,14 @@ module.exports = function(app) {
         app.error('replacement not found for field ' + name)
       }
 
-      //replace all the occurences with the property value
+      //replace all the occurrences with the property value
       template = template.replace(new RegExp(replacementArray[i], 'g'), value)
     }
     return template;
   }
 
   function findValueByIncludes(object, search) {
-    for (var property in object) {
+    for (let property in object) {
       if (object.hasOwnProperty(property) &&
         property.toString().includes(search)) {
         return object[property]
@@ -186,7 +186,7 @@ module.exports = function(app) {
         let currentStr = inputArray[i]
         let tempStr = currentStr.toLowerCase()
 
-        if (i != 0) {
+        if (i !== 0) {
           tempStr = tempStr.substr(0, 1).toUpperCase() + tempStr.substr(1)
         }
 
@@ -207,7 +207,7 @@ module.exports = function(app) {
       _.values(sources).forEach(v => {
         if (typeof v === 'object') {
           _.keys(v).forEach(id => {
-            if (v[id] && v[id].n2k && v[id].n2k.src == src.toString()) {
+            if (v[id] && v[id].n2k && v[id].n2k.src === src.toString()) {
               if (v[id].n2k.hasOwnProperty(property)) {
                 value = v[id].n2k[property]
                 app.debug('Found property ' + value)
